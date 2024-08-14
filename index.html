@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookstore</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="my-4">Bookstore</h1>
+
+        <!-- Add Book Form -->
+        <div class="mb-4">
+            <h2>Add a New Book</h2>
+            <form id="addBookForm">
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <input type="text" class="form-control" id="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="author">Author</label>
+                    <input type="text" class="form-control" id="author" required>
+                </div>
+                <div class="form-group">
+                    <label for="publishYear">Publish Year</label>
+                    <input type="number" class="form-control" id="publishYear" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Book</button>
+            </form>
+        </div>
+
+        <!-- Books List -->
+        <h2 class="my-4">Books List</h2>
+        <table class="table table-striped" id="booksTable">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Publish Year</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Books will be dynamically inserted here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const apiUrl = 'http://localhost:5656/books';
+
+        // Add Book
+        document.getElementById('addBookForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const title = document.getElementById('title').value;
+            const author = document.getElementById('author').value;
+            const publishYear = document.getElementById('publishYear').value;
+
+            try {
+                await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ title, author, publishYear })
+                });
+                fetchBooks(); // Refresh the book list
+            } catch (error) {
+                console.error('Error adding book:', error);
+            }
+        });
+
+        // Fetch Books
+        async function fetchBooks() {
+            try {
+                const response = await fetch(apiUrl);
+                const books = await response.json();
+                const tableBody = document.querySelector('#booksTable tbody');
+                tableBody.innerHTML = ''; // Clear the table body
+                books.forEach(book => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${book.title}</td>
+                        <td>${book.author}</td>
+                        <td>${book.publishYear}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="editBook('${book._id}')">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteBook('${book._id}')">Delete</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error fetching books:', error);
+            }
+        }
+
+        // Delete Book
+        async function deleteBook(id) {
+            try {
+                await fetch(`${apiUrl}/${id}`, {
+                    method: 'DELETE'
+                });
+                fetchBooks(); // Refresh the book list
+            } catch (error) {
+                console.error('Error deleting book:', error);
+            }
+        }
+
+        // Initial fetch
+        fetchBooks();
+    </script>
+</body>
+</html>
+
